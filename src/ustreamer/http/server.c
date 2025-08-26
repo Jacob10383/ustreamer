@@ -605,19 +605,27 @@ static void _http_callback_stream(struct evhttp_request *request, void *v_server
 			free(name);
 		}
 
-		// Check if we need to evict the oldest client
+		// Check if we need to evict the oldest client BEFORE adding the new one
 		if (server->max_clients > 0 && run->stream_clients_count >= server->max_clients) {
 			us_stream_client_s *oldest = run->stream_clients;
 			if (oldest != NULL) {
 				_LOG_INFO("EVICTING oldest client (limit=%u): %s, id=%" PRIx64,
 					server->max_clients, oldest->hostport, oldest->id);
 				
+				// Manually remove and clean up the oldest client to avoid race conditions
+				US_LIST_REMOVE_C(run->stream_clients, oldest, run->stream_clients_count);
+				
 				// Force disconnect oldest client
 				struct evhttp_connection *old_conn = evhttp_request_get_connection(oldest->request);
 				if (old_conn != NULL) {
 					evhttp_connection_free(old_conn);
 				}
-				// The _http_callback_stream_error will be called automatically to clean up
+				
+				// Clean up the client manually
+				us_fpsi_destroy(oldest->fpsi);
+				free(oldest->key);
+				free(oldest->hostport);
+				free(oldest);
 			}
 		}
 
