@@ -87,6 +87,7 @@ enum _US_OPT_VALUES {
 	_O_INSTANCE_ID,
 	_O_TCP_NODELAY,
 	_O_SERVER_TIMEOUT,
+	_O_MAX_STREAM_CLIENTS,
 
 #	define ADD_SINK(x_prefix) \
 		_O_##x_prefix, \
@@ -191,6 +192,7 @@ static const struct option _LONG_OPTS[] = {
 	{"fake-resolution",			required_argument,	NULL,	_O_FAKE_RESOLUTION},
 	{"tcp-nodelay",				no_argument,		NULL,	_O_TCP_NODELAY},
 	{"server-timeout",			required_argument,	NULL,	_O_SERVER_TIMEOUT},
+	{"max-stream-clients",		required_argument,	NULL,	_O_MAX_STREAM_CLIENTS},
 
 #	define ADD_SINK(x_opt, x_prefix) \
 		{x_opt "-sink",				required_argument,	NULL,	_O_##x_prefix}, \
@@ -455,6 +457,7 @@ int options_parse(us_options_s *options, us_capture_s *cap, us_encoder_s *enc, u
 				break;
 			case _O_TCP_NODELAY:		OPT_SET(server->tcp_nodelay, true);
 			case _O_SERVER_TIMEOUT:		OPT_NUMBER("--server-timeout", server->timeout, 1, 60, 0);
+			case _O_MAX_STREAM_CLIENTS:	OPT_NUMBER("--max-stream-clients", server->max_clients, 1, 10000, 0);
 
 #			define ADD_SINK(x_opt, x_lp, x_up) \
 				case _O_##x_up:					OPT_SET(x_lp##_name, optarg); \

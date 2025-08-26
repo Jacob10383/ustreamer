@@ -116,6 +116,7 @@ typedef struct us_server_sx {
 	uint	drop_same_frames;
 	uint	fake_width;
 	uint	fake_height;
+	uint	max_clients;
 
 	us_server_runtime_s *run;
 } us_server_s;
