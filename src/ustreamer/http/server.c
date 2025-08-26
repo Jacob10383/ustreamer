@@ -574,6 +574,22 @@ static void _http_callback_stream(struct evhttp_request *request, void *v_server
 
 	PREPROCESS_REQUEST;
 
+	if (run->stream_clients_count >= 3) {
+		us_stream_client_s *const oldest_client = run->stream_clients;
+		_LOG_INFO("Maximum clients reached. Evicting oldest client from %s (id=%" PRIx64 ")",
+			oldest_client->hostport, oldest_client->id);
+
+		struct evhttp_connection *conn = evhttp_request_get_connection(oldest_client->request);
+		US_DELETE(conn, evhttp_connection_free);
+
+		US_LIST_REMOVE_C(run->stream_clients, oldest_client, run->stream_clients_count);
+
+		us_fpsi_destroy(oldest_client->fpsi);
+		free(oldest_client->key);
+		free(oldest_client->hostport);
+		free(oldest_client);
+	}
+
 	struct evhttp_connection *const conn = evhttp_request_get_connection(request);
 	if (conn != NULL) {
 		us_stream_client_s *client;
